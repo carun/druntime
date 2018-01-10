@@ -452,17 +452,17 @@ extern (C) int _d_run_main(int argc, char **argv, MainFunc mainFunc)
         args = argsCopy[0..j];
     }
 
-    bool trapExceptions = rt_trapExceptions;
+    auto useExceptionTrap = parseExceptionOptions();
 
     version (Windows)
     {
         if (IsDebuggerPresent())
-            trapExceptions = false;
+            useExceptionTrap = false;
     }
 
     void tryExec(scope void delegate() dg)
     {
-        if (trapExceptions)
+        if (useExceptionTrap)
         {
             try
             {
@@ -556,6 +556,31 @@ private void formatThrowable(Throwable t, scope void delegate(in char[] s) nothr
         }
         sink("=== ~Bypassed ===\n");
     }
+}
+
+private auto parseExceptionOptions()
+{
+    import rt.config : rt_configOption;
+    const optName = "trapExceptions";
+    auto res = rt_configOption(optName);
+    auto trap = rt_trapExceptions;
+    switch(res)
+    {
+        case "1", "y", "yes", "Y", "Yes", "true":
+            trap = true;
+            break;
+        case "0", "n", "no", "N", "No", "false":
+            trap = false;
+            break;
+        case "":
+            break;
+        default:
+            fprintf(stderr, "Invalid value '%.*s' for option '%s'.\n",
+                    res.length, res.ptr,
+                    optName.ptr);
+            break;
+    }
+    return trap;
 }
 
 extern (C) void _d_print_throwable(Throwable t)

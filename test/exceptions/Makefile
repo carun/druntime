@@ -1,6 +1,6 @@
 include ../common.mak
 
-TESTS:=stderr_msg unittest_assert invalid_memory_operation unknown_gc static_dtor future_message
+TESTS:=stderr_msg unittest_assert invalid_memory_operation unknown_gc static_dtor future_message rt_opt
 
 ifeq ($(OS)-$(BUILD),linux-debug)
 	TESTS:=$(TESTS) line_trace rt_trap_exceptions
@@ -52,6 +52,10 @@ $(ROOT)/%.done: $(ROOT)/%
 	@echo Testing $*
 	$(NEGATE) $(QUIET)$(TIMELIMIT)$(ROOT)/$* $(RUN_ARGS) 2>&1 1>/dev/null | grep -qF $(STDERR_EXP)
 	@touch $@
+
+$(ROOT)/rt_opt.done: STDERR_EXP="uncaught exception\nobject.Exception@rt_opt.d(3): exception"
+$(ROOT)/rt_opt.done: RUN_ARGS="--DRT-trapExceptions=0"
+$(ROOT)/rt_opt.done: NEGATE=!
 
 $(ROOT)/unittest_assert: DFLAGS+=-unittest
 $(ROOT)/line_trace: DFLAGS+=$(LINE_TRACE_DFLAGS)
