@@ -482,8 +482,6 @@ extern (C) int _d_run_main(int argc, char **argv, MainFunc mainFunc)
             }
             return false;
         }
-        if (isDebuggerPresent())
-            useExceptionTrap = false;
     }
 
     void tryExec(scope void delegate() dg)
@@ -496,6 +494,16 @@ extern (C) int _d_run_main(int argc, char **argv, MainFunc mainFunc)
             }
             catch (Throwable t)
             {
+                // Detecting whether the program is run in a debugger is expensive
+                // Hence, only run the detection on an actual uncaught exception
+                version(linux)
+                {
+                    if (isDebuggerPresent())
+                    {
+                        useExceptionTrap = false;
+                        throw t;
+                    }
+                }
                 _d_print_throwable(t);
                 result = EXIT_FAILURE;
             }
