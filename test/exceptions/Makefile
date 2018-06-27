@@ -1,25 +1,24 @@
 include ../common.mak
 
-TESTS=stderr_msg unittest_assert invalid_memory_operation unknown_gc static_dtor future_message rt_opt
-TESTS=
+TESTS=stderr_msg unittest_assert invalid_memory_operation unknown_gc static_dtor future_message rt_trap_exceptions_drt
 
 ifeq ($(OS)-$(BUILD),linux-debug)
-	TESTS=$(TESTS) line_trace rt_trap_exceptions
+	TESTS+=line_trace rt_trap_exceptions
 	LINE_TRACE_DFLAGS:=-L--export-dynamic
 endif
 ifeq ($(OS),linux)
-	TESTS+=rt_opt_gdb
+	TESTS+=rt_trap_exceptions_drt_gdb
 endif
 ifeq ($(OS)-$(BUILD),freebsd-debug)
-	TESTS:=$(TESTS) line_trace
+	TESTS+=line_trace
 	LINE_TRACE_DFLAGS:=-L--export-dynamic
 endif
 ifeq ($(OS)-$(BUILD),dragonflybsd-debug)
-	TESTS:=$(TESTS) line_trace
+	TESTS+=line_trace
 	LINE_TRACE_DFLAGS:=-L--export-dynamic
 endif
 ifeq ($(OS)-$(BUILD),osx-debug)
-	TESTS:=$(TESTS) line_trace
+	TESTS+=line_trace
 	LINE_TRACE_DFLAGS:=
 endif
 
@@ -58,20 +57,22 @@ $(ROOT)/%.done: $(ROOT)/%
 	$(NEGATE) $(QUIET)$(TIMELIMIT)$(ROOT)/$* $(RUN_ARGS) 2>&1 1>/dev/null | grep -qF $(STDERR_EXP)
 	@touch $@
 
-$(ROOT)/rt_opt.done: STDERR_EXP="uncaught exception\nobject.Exception@rt_opt.d(3): exception"
-$(ROOT)/rt_opt.done: RUN_ARGS="--DRT-trapExceptions=0"
-$(ROOT)/rt_opt.done: NEGATE=!
+$(ROOT)/rt_trap_exceptions_drt.done: STDERR_EXP="uncaught exception\nobject.Exception@rt_trap_exceptions_drt.d(4): exception"
+$(ROOT)/rt_trap_exceptions_drt.done: RUN_ARGS="--DRT-trapExceptions=0"
+$(ROOT)/rt_trap_exceptions_drt.done: NEGATE=!
 
 
-$(ROOT)/rt_opt_gdb.done: $(ROOT)/rt_opt
-	@echo Testing rt_opt_gdb
-	$(QUIET)$(TIMELIMIT) $(GDB) -ex run -ex 'bt full' -ex q $< > $(ROOT)/rt_opt_gdb.output
-	grep "in D main ()" > /dev/null < $(ROOT)/rt_opt_gdb.output
-	! grep "No stack." > /dev/null < $(ROOT)/rt_opt_gdb.output
+$(ROOT)/rt_trap_exceptions_drt_gdb.done: $(ROOT)/rt_trap_exceptions_drt
+	@echo Testing rt_trap_exceptions_drt_gdb
+	$(QUIET)$(TIMELIMIT) $(GDB) -ex run -ex 'bt full' -ex q $< > $(ROOT)/rt_trap_exceptions_drt_gdb.output 2>&1
+	grep "in D main" > /dev/null < $(ROOT)/rt_trap_exceptions_drt_gdb.output
+	grep 'myLocal' > /dev/null < $(ROOT)/rt_trap_exceptions_drt_gdb.output
+	! grep "No stack." > /dev/null < $(ROOT)/rt_trap_exceptions_drt_gdb.output
 	@touch $@
 
 $(ROOT)/unittest_assert: DFLAGS+=-unittest
 $(ROOT)/line_trace: DFLAGS+=$(LINE_TRACE_DFLAGS)
+$(ROOT)/rt_trap_exceptions_drt: DFLAGS+=-g
 $(ROOT)/%: $(SRC)/%.d $(DMD) $(DRUNTIME)
 	$(QUIET)$(DMD) $(DFLAGS) -of$@ $<
 
