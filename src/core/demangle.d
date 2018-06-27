@@ -1957,6 +1957,7 @@ pure @safe:
 
     char[] doDemangle(alias FUNC)()
     {
+        auto prevBuf = buf;
         while( true )
         {
             try
@@ -1990,7 +1991,11 @@ pure @safe:
             }
             catch( Exception e )
             {
-                assert( false ); // no other exceptions thrown
+                //assert( false ); // no other exceptions thrown
+                // TODO: ugly hack around mangling error
+                dst = null;
+                dst ~= prevBuf;
+                return dst;
             }
         }
     }

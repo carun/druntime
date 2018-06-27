@@ -6,20 +6,21 @@ Now you can, for example, immediately open `gdb` at the uncaught exception:
 
 $(CONSOLE
 > gdb -ex run --args <my-program> "--DRT-trapExceptions=0"
-object.Exception@/home/seb/dlang/druntime/test/exceptions/src/rt_opt.d(3): foo
-$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)$(NDASH)
-Program received signal SIGILL, Illegal instruction.
-0x00005555555a65e9 in _D4core8demangle__T8DemangleTSQBcQBa7NoHooksZQBa__T10doDemangleSQCkQCi__TQCcTQBwZQCk16parseMangledNameZQCaMFNaNbNfZAa ()
-(gdb) bt
-#0  0x00005555555a65e9 in _D4core8demangle__T8DemangleTSQBcQBa7NoHooksZQBa__T10doDemangleSQCkQCi__TQCcTQBwZQCk16parseMangledNameZQCaMFNaNbNfZAa ()
-#1  0x000055555559b194 in rt.backtrace.dwarf.traceHandlerOpApplyImpl(const(void*[]), scope int(ref ulong, ref const(char[])) delegate) ()
-#2  0x0000555555590349 in core.runtime.defaultTraceHandler(void*).DefaultTraceInfo.opApply(scope int(ref ulong, ref const(char[])) delegate) const ()
-#3  0x00005555555902e2 in core.runtime.defaultTraceHandler(void*).DefaultTraceInfo.opApply(scope int(ref const(char[])) delegate) const ()
-#4  0x000055555558797c in object.Throwable.toString(scope void(const(char[])) delegate) const ()
-#5  0x0000555555589000 in rt.dmain2.formatThrowable(object.Throwable, scope void(const(char[])) nothrow delegate) ()
-#6  0x0000555555585650 in _d_print_throwable ()
-#7  0x00005555555857e9 in _d_throwdwarf ()
-#8  0x00005555555850bc in D main (args=...) at rt_opt.d:3
+object.Exception@test/exceptions/src/rt_opt.d(4): foo
+----------------
+??:? _Dmain [0x5558fa3e]
+
+Program received signal SIGABRT, Aborted.
+0x00007ffff6e7b86b in raise () from /usr/lib/libc.so.6
+#0  0x00007ffff6e7b86b in raise () from /usr/lib/libc.so.6
+No symbol table info available.
+#1  0x00007ffff6e6640e in abort () from /usr/lib/libc.so.6
+No symbol table info available.
+#2  0x000055555559020c in _d_throwdwarf ()
+No symbol table info available.
+#3  0x000055555558fa3f in D main (args=...)
+    at /home/seb/dlang/dmd/generated/linux/release/64/../../../../../druntime/import/object.d:2695
+        myLocal = "bar"
 )
 
 $(LINK2 http://arsdnet.net/this-week-in-d/2016-aug-07.html, This Week in D) for
