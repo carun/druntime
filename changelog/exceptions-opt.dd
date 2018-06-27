@@ -24,3 +24,6 @@ Program received signal SIGILL, Illegal instruction.
 
 $(LINK2 http://arsdnet.net/this-week-in-d/2016-aug-07.html, This Week in D) for
 an in-depth explanation of `rt_trapExceptions`
+
+If a debugger is reliably detected (e.g. Windows debugger or `gdb`),
+exception trapping will be automatically disabled.

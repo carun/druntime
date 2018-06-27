@@ -1,10 +1,14 @@
 include ../common.mak
 
-TESTS:=stderr_msg unittest_assert invalid_memory_operation unknown_gc static_dtor future_message rt_opt
+TESTS=stderr_msg unittest_assert invalid_memory_operation unknown_gc static_dtor future_message rt_opt
+TESTS=
 
 ifeq ($(OS)-$(BUILD),linux-debug)
-	TESTS:=$(TESTS) line_trace rt_trap_exceptions
+	TESTS=$(TESTS) line_trace rt_trap_exceptions
 	LINE_TRACE_DFLAGS:=-L--export-dynamic
+endif
+ifeq ($(OS),linux)
+	TESTS+=rt_opt_gdb
 endif
 ifeq ($(OS)-$(BUILD),freebsd-debug)
 	TESTS:=$(TESTS) line_trace
@@ -21,6 +25,7 @@ endif
 
 DIFF:=diff
 SED:=sed
+GDB:=gdb
 
 .PHONY: all clean
 all: $(addprefix $(ROOT)/,$(addsuffix .done,$(TESTS)))
@@ -57,9 +62,17 @@ $(ROOT)/rt_opt.done: STDERR_EXP="uncaught exception\nobject.Exception@rt_opt.d(3
 $(ROOT)/rt_opt.done: RUN_ARGS="--DRT-trapExceptions=0"
 $(ROOT)/rt_opt.done: NEGATE=!
 
+
+$(ROOT)/rt_opt_gdb.done: $(ROOT)/rt_opt
+	@echo Testing rt_opt_gdb
+	$(QUIET)$(TIMELIMIT) $(GDB) -ex run -ex 'bt full' -ex q $< > $(ROOT)/rt_opt_gdb.output
+	grep "in D main ()" > /dev/null < $(ROOT)/rt_opt_gdb.output
+	! grep "No stack." > /dev/null < $(ROOT)/rt_opt_gdb.output
+	@touch $@
+
 $(ROOT)/unittest_assert: DFLAGS+=-unittest
 $(ROOT)/line_trace: DFLAGS+=$(LINE_TRACE_DFLAGS)
-$(ROOT)/%: $(SRC)/%.d
+$(ROOT)/%: $(SRC)/%.d $(DMD) $(DRUNTIME)
 	$(QUIET)$(DMD) $(DFLAGS) -of$@ $<
 
 clean:

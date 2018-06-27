@@ -459,6 +459,32 @@ extern (C) int _d_run_main(int argc, char **argv, MainFunc mainFunc)
         if (IsDebuggerPresent())
             useExceptionTrap = false;
     }
+    else version(linux)
+    {
+        // TODO: where to move this code
+        static bool isDebuggerPresent()
+        {
+            char[1024] buf;
+
+            auto statusFd = fopen("/proc/self/status".ptr, "r".ptr);
+            scope(exit) fclose(statusFd);
+            if (statusFd is null)
+                return false;
+
+            size_t numRead = fread(buf.ptr, 1, buf.length - 1, statusFd);
+            if (numRead > 0)
+            {
+                static immutable TracerPid = "TracerPid:";
+                buf[numRead] = 0;
+                auto tracerPid = strstr(buf.ptr, TracerPid.ptr);
+                if (tracerPid)
+                    return atoi(tracerPid + TracerPid.length) > 0;
+            }
+            return false;
+        }
+        if (isDebuggerPresent())
+            useExceptionTrap = false;
+    }
 
     void tryExec(scope void delegate() dg)
     {
