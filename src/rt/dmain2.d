@@ -468,6 +468,14 @@ extern (C) int _d_run_main(int argc, char **argv, MainFunc mainFunc)
 
     auto useExceptionTrap = parseExceptionOptions();
 
+    // Handle page protection errors using D errors (exceptions) when supported
+    version (linux)
+    {
+        import etc.linux.memoryerror : registerMemoryErrorHandler;
+        if (parseMemoryErrorOptions())
+            registerMemoryErrorHandler();
+    }
+
     version (Windows)
     {
         if (IsDebuggerPresent())
@@ -579,6 +587,18 @@ private auto parseExceptionOptions()
     const optName = "trapExceptions";
     auto option = rt_configOption(optName);
     auto trap = rt_trapExceptions;
+    if (option.length)
+        rt_parseOption(optName, option, trap, "");
+    return trap;
+}
+
+private auto parseMemoryErrorOptions()
+{
+    import rt.config : rt_configOption;
+    import core.internal.parseoptions : rt_parseOption;
+    enum optName = "memoryError";
+    auto option = rt_configOption(optName);
+    bool trap;
     if (option.length)
         rt_parseOption(optName, option, trap, "");
     return trap;
