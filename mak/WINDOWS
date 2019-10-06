@@ -500,6 +500,9 @@ $(IMPDIR)\core\sys\linux\sched.d : src\core\sys\linux\sched.d
 $(IMPDIR)\core\sys\linux\string.d : src\core\sys\linux\string.d
 	copy $** $@
 
+$(IMPDIR)\core\sys\linux\syscalls.d : src\core\sys\linux\syscalls.d
+	copy $** $@
+
 $(IMPDIR)\core\sys\linux\termios.d : src\core\sys\linux\termios.d
 	copy $** $@
 
